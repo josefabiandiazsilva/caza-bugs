@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caza-Bugs · Arrays en Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root{--red:#E50914;--dred:#B20710;--black:#141414;--gray:#f5f5f5;--mid:#6b6b6b;--line:#e4e4e4;--amber:#F5A524;--green:#2E9E5B;--blue:#2B6CB0;--bg:#ffffff;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--black);font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,a{font-family:inherit;cursor:pointer;color:inherit}
+img.px{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.wrap{max-width:1260px;margin:0 auto;padding:0 20px}
+.kicker{font-family:Silkscreen,monospace;font-size:12px;color:var(--red);letter-spacing:1px;text-transform:uppercase}
+.muted{color:var(--mid)}.small{font-size:13px}
+.h1{font-family:"Bebas Neue",Impact,sans-serif;font-size:clamp(54px,8.4vw,112px);line-height:.88;letter-spacing:1px;font-weight:400}
+.h2{font-family:"Bebas Neue",Impact,sans-serif;font-size:clamp(34px,4.6vw,56px);line-height:.95;font-weight:400}
+.h3{font-family:"Bebas Neue",Impact,sans-serif;font-size:27px;line-height:1;font-weight:400;letter-spacing:.5px}
+.top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:2px solid var(--black)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.logo{font-family:"Bebas Neue",Impact,sans-serif;font-size:32px;color:var(--red);letter-spacing:1px;white-space:nowrap;text-decoration:none;display:flex;align-items:center;gap:8px}
+.logo span{color:var(--black)}
+.btn{font-family:"Bebas Neue",Impact,sans-serif;font-size:23px;letter-spacing:1px;background:var(--red);color:#fff;border:2px solid var(--black);box-shadow:4px 4px 0 var(--black);padding:8px 22px 6px;transition:transform .08s,box-shadow .08s;display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--black)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--black)}
+.btn.ghost{background:#fff;color:var(--black)}
+.chip{font-family:Silkscreen,monospace;font-size:11px;border:2px solid var(--black);padding:3px 8px;background:#fff;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+code,.mono{font-family:"JetBrains Mono",Consolas,monospace}
+@keyframes up{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes float{50%{translate:0 -12px}}
+@keyframes pop{0%{transform:scale(.4) rotate(-8deg);opacity:0}60%{transform:scale(1.08) rotate(2deg);opacity:1}100%{transform:none}}
+@keyframes flapA{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes flapB{0%,49%{opacity:0}50%,100%{opacity:1}}
+@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(calc(100vw + 200px))}}
+@keyframes rise{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-70px)}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translate(-6px,3px)}50%{transform:translate(5px,-4px)}75%{transform:translate(-3px,-2px)}}
+@keyframes dogup{0%{transform:translate(-50%,100%)}25%,80%{transform:translate(-50%,0)}100%{transform:translate(-50%,100%)}}
+@keyframes laugh{50%{translate:0 -6px}}
+@keyframes blink{50%{opacity:.2}}
+@keyframes drop{from{transform:translate(-50%,-30px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+.rv{opacity:0;animation:up .75s var(--ease) forwards;animation-delay:calc(var(--d,0) * 110ms)}
+.fl{animation:float 3.2s ease-in-out infinite}
+/* código */
+.code{font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;line-height:1.4;white-space:pre;font-weight:500}
+.code .kw{color:var(--red);font-weight:700}.code .ty{color:var(--blue);font-weight:700}.code .nu{color:#B26B00;font-weight:700}.code .st{color:var(--green)}.code .cm{color:var(--mid);font-style:italic}
+/* intro */
+.intro{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:40px 0 30px}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.rule{border:2px solid var(--black);padding:12px 14px;background:#fff}
+.rule b{font:400 22px "Bebas Neue",Impact;letter-spacing:.5px;display:block}
+.rule.boss{grid-column:1/-1;background:var(--black);color:#fff;display:flex;gap:14px;align-items:center}
+.rule.boss b{color:var(--amber)}
+.ctx{margin-top:12px;border:2px dashed var(--black);padding:10px 14px;font-size:13px;background:var(--gray)}
+.ctx code{font-size:12px;background:#fff;border:1px solid var(--line);padding:0 4px}
+.demo{border:2px solid var(--black);box-shadow:8px 8px 0 var(--black);background:#fff;padding:26px 20px;position:relative;min-height:440px;overflow:hidden}
+.demo .target{position:absolute;cursor:default}
+.topics{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tchip{font-family:Silkscreen,monospace;font-size:10px;color:#fff;padding:3px 8px;border:2px solid var(--black)}
+/* arena */
+.hud{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0}
+.hud .box{border:2px solid var(--black);padding:4px 10px;display:flex;align-items:center;gap:8px;background:#fff}
+.hud .lbl{font-family:Silkscreen,monospace;font-size:10px;color:var(--mid)}
+.hud .val{font:400 28px "Bebas Neue",Impact;line-height:1}
+.hearts{display:flex;gap:3px}.hearts i{width:18px;height:16px;display:block;background:var(--red);clip-path:polygon(0 25%,25% 0,50% 25%,75% 0,100% 25%,100% 55%,50% 100%,0 55%)}
+.hearts i.off{background:var(--line)}
+.shells{display:flex;gap:4px}.shells i{width:9px;height:20px;background:var(--amber);border:2px solid var(--black);display:block}
+.shells i.off{background:#fff;border-color:var(--line)}
+.track{display:flex;gap:3px;flex-wrap:wrap;max-width:300px}.track i{width:12px;height:12px;border:2px solid var(--black);background:#fff;display:block}
+.track i.boss{border-radius:50%;border-color:var(--amber)}
+.track i.sep{border:0;width:4px;background:transparent}
+.track i.ok{background:var(--green)}.track i.bad{background:var(--red)}.track i.cur{animation:blink .6s infinite;background:var(--black)}
+.mute{margin-left:auto}
+.arena{position:relative;height:min(72vh,660px);min-height:480px;border:2px solid var(--black);box-shadow:6px 6px 0 var(--black);background:#fff;overflow:hidden;cursor:none;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.arena.shake{animation:shake .25s}
+.arena .gridbg{position:absolute;inset:0;background-image:linear-gradient(#f2f2f2 2px,transparent 2px),linear-gradient(90deg,#f2f2f2 2px,transparent 2px);background-size:40px 40px;opacity:.7}
+.cloud{position:absolute;left:0;animation:drift linear infinite;opacity:.9}
+.ground{position:absolute;left:0;right:0;bottom:0;height:86px;background:var(--black);z-index:6}
+.ground::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px;background:repeating-linear-gradient(90deg,var(--green) 0 14px,transparent 14px 20px,var(--green) 20px 28px,transparent 28px 34px);}
+.ground .msg{position:absolute;left:18px;right:18px;top:12px;color:#fff;font-size:14px;line-height:1.35;display:flex;gap:12px;align-items:center}
+.ground .msg b{font:400 22px "Bebas Neue",Impact;letter-spacing:.5px;color:var(--amber);white-space:nowrap}
+.bush{position:absolute;bottom:86px;z-index:5}
+.target{position:absolute;left:0;top:0;width:max-content;min-width:230px;z-index:3;will-change:transform}
+.target .birds{position:relative;height:40px;width:70px;margin:0 auto}
+.target .birds img{position:absolute;left:0;top:0;width:70px;height:40px}
+.target .birds img.a{animation:flapA .3s infinite}.target .birds img.b{animation:flapB .3s infinite}
+.target .str{position:absolute;top:34px;width:2px;height:22px;background:var(--black)}
+.target .str.l{left:calc(50% - 32px);transform:rotate(-25deg);transform-origin:top}.target .str.r{left:calc(50% + 30px);transform:rotate(25deg);transform-origin:top}
+.sign{margin-top:14px;border:3px solid var(--black);background:#fff;box-shadow:4px 4px 0 var(--black);display:grid;grid-template-columns:38px 1fr;gap:10px;padding:8px 10px 8px 8px;align-items:stretch}
+.tico{font:400 17px "Bebas Neue",Impact;color:#fff;display:grid;place-items:center;border:2px solid var(--black);letter-spacing:.5px;writing-mode:vertical-rl;transform:rotate(180deg)}
+.target.opt{width:150px;min-width:0}
+.target.opt .sign{grid-template-columns:1fr;text-align:center;padding:6px 8px}
+.target.opt .val{font:700 28px "JetBrains Mono",Consolas,monospace;line-height:1.1}
+.target.hit .sign{background:var(--black);color:#fff}
+.target.hit .code span{color:inherit}
+.fx{position:absolute;z-index:8;pointer-events:none;font:400 26px "Bebas Neue",Impact;letter-spacing:.5px;white-space:nowrap;animation:rise 1.3s forwards;text-shadow:2px 2px 0 #fff}
+.bit{position:absolute;width:8px;height:8px;z-index:7;pointer-events:none}
+.flash{position:absolute;inset:0;background:#fff;z-index:9;pointer-events:none;opacity:0}
+.cross{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;z-index:20;pointer-events:none;left:-100px;top:-100px}
+.dog{position:absolute;left:50%;bottom:86px;z-index:4;transform:translate(-50%,100%);text-align:center}
+.dog:not(.show){visibility:hidden}
+.dog.show{animation:dogup 2.6s var(--ease) forwards}
+.dog img{width:100px;height:100px;margin:0 auto;animation:laugh .35s infinite}
+.dog .bub{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:max-content;max-width:320px;background:#fff;border:2px solid var(--black);box-shadow:3px 3px 0 var(--black);padding:6px 10px;font-size:13px;font-weight:700;margin-bottom:6px;text-align:left}
+.bosspanel{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:2;background:var(--black);color:#fff;border:3px solid var(--black);box-shadow:6px 6px 0 var(--amber);padding:10px 16px 12px;max-width:min(560px,92%);animation:drop .4s var(--ease);transition:opacity 1.2s .3s}
+.bosspanel.done{opacity:0}
+.bosspanel .kicker{color:var(--amber)}
+.bosspanel .q{font:400 24px "Bebas Neue",Impact;letter-spacing:.5px;margin:2px 0 6px}
+.bosspanel .code{color:#fff;font-size:13px}
+.bosspanel .code .kw{color:#ff6b72}.bosspanel .code .ty{color:#8fbcf0}.bosspanel .code .nu{color:var(--amber)}.bosspanel .code .cm{color:#a8a8a8}.bosspanel .code .st{color:#6fd39b}
+.overlay{position:absolute;inset:0;z-index:15;display:grid;place-items:center;background:rgba(255,255,255,.86);cursor:default;animation:fade .3s}
+.card{border:3px solid var(--black);background:#fff;box-shadow:8px 8px 0 var(--red);padding:22px 28px;text-align:center;max-width:540px;animation:pop .5s var(--ease)}
+.card .big{font:400 clamp(60px,9vw,110px) "Bebas Neue",Impact;line-height:.85;color:var(--red)}
+/* end */
+.end{display:grid;grid-template-columns:auto 1fr;gap:34px;align-items:center;padding:34px 0 10px}
+.end .bigface{width:220px;height:220px;border:3px solid var(--black);box-shadow:10px 10px 0 var(--red);display:grid;place-items:center;background:#fff;animation:pop .8s var(--ease)}
+.end .bigface img{width:180px;height:180px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.stat{border:2px solid var(--black);padding:8px 14px;background:#fff}
+.stat b{font:400 36px "Bebas Neue",Impact;display:block;line-height:1}
+.stat span{font-family:Silkscreen,monospace;font-size:10px;color:var(--mid)}
+.rowtitle{font-family:"Bebas Neue",Impact,sans-serif;font-size:34px;letter-spacing:.5px;font-weight:400;margin:40px 0 14px}
+.review{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rcard{border:2px solid var(--black);display:grid;grid-template-columns:38px 1fr;gap:12px;padding:12px 14px;background:#fff}
+.rcard .tag{font-family:Silkscreen,monospace;font-size:10px;color:var(--red)}
+.rcard.ok .tag{color:var(--green)}
+.rcard .code{background:var(--gray);border:1px solid var(--line);padding:6px 8px;margin:6px 0;font-size:12px;overflow-x:auto}
+.levels{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+button.chip{cursor:pointer;color:var(--black)}button.chip:hover{background:var(--amber)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:20px}
+.foot{border-top:2px solid var(--black);margin-top:50px;padding:18px 0 40px;font-size:12px;color:var(--mid);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+.foot .author{font-family:Silkscreen,monospace;font-size:11px;color:var(--black);border:2px solid var(--black);padding:4px 10px;box-shadow:3px 3px 0 var(--red);background:#fff}
+.foot .author b{color:var(--red);font-weight:400}
+@media (max-width:900px){.intro,.end{grid-template-columns:1fr}.review{grid-template-columns:1fr}}
+@media (max-width:640px){.top .chip.hide-s{display:none}.top .wrap{gap:8px}.logo{font-size:26px}.target{min-width:170px}.target.opt{width:120px}.code{font-size:10.5px}.sign{grid-template-columns:28px 1fr;padding:6px 8px 6px 6px;gap:7px}.tico{font-size:14px}.ground .msg{font-size:12px;flex-direction:column;align-items:flex-start;gap:0;top:8px}.ground .msg b{font-size:19px}.rules{grid-template-columns:1fr}.arena{cursor:default}.cross{display:none}.bosspanel .code{font-size:11px}.bosspanel .q{font-size:20px}}
+@media (prefers-reduced-motion:reduce){.cloud,.fl{animation:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="logo" href="#" onclick="intro();return false">JAVA<span>·ARRAYS</span></a><span class="chip">CAZA-BUGS</span><span style="flex:1"></span><span class="chip hide-s">Programación de Computadores</span></div></header>
+<main class="wrap" id="app"></main>
+<script>
+/* =========================================================
+   Pixel art
+   ========================================================= */
+function outlined(G,col){
+ const h=G.length,w=G[0].length;const O=Array.from({length:h+2},()=>Array(w+2).fill(null));
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++)O[y+1][x+1]=G[y][x];
+ const R=O.map(r=>r.slice());
+ for(let y=0;y<h+2;y++)for(let x=0;x<w+2;x++){if(O[y][x])continue;if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>O[y+dy]&&O[y+dy][x+dx]))R[y][x]=col||'#141414'}
+ return R;
+}
+function toURL(G,s){const c=document.createElement('canvas');c.width=G[0].length*s;c.height=G.length*s;const x=c.getContext('2d');for(let y=0;y<G.length;y++)for(let i=0;i<G[y].length;i++){const v=G[y][i];if(v){x.fillStyle=v;x.fillRect(i*s,y*s,s,s)}}return c.toDataURL()}
+const P={K:'#141414',W:'#ffffff',R:'#E50914',D:'#B20710',A:'#F5A524',G:'#2E9E5B',g:'#1f7a45',S:'#e9e9e9',s:'#d6d6d6',B:'#2B6CB0'};
+function gridURL(rows,s,outline){const G=rows.map(r=>r.split('').map(c=>c==='.'?null:P[c]));return toURL(outline?outlined(G):G,s)}
+const BIRD_A=gridURL(['RR..........RR','RRR........RRR','.RRR..KK..RRR.','..RRRKKKKRRR..','....KKWKKK....','....KKKKKKA...','.....KKKK.....'],5,false);
+const BIRD_B=gridURL(['..............','......KK......','....KKKKKK....','..RRKKWKKKRR..','.RRRRKKKKKARRR','RRR..KKKK..RRR','RR..........RR'],5,false);
+const CLOUD=gridURL(['....SSSS......','..SSSSSSSS.SS.','.SSSSSSSSSSSSS','SSSSSSSSSSSSSS','.ssssssssssss.'],10,false);
+const BUSH=gridURL(['....GGG....GG...','..GGGGGGGGGGGG..','.GGGgGGGGGGgGGG.','GGGGGGGgGGGGGGGG','GgGGGGGGGGGGgGGG'],9,true);
+/* Mascota: la taza de Java (pixel art original) */
+const CUP_ROWS=o=>['.....S..S..S....','....S..S..S.....','.....S..S..S....','................','.KKKKKKKKKKKKK..','.KWRRRRRRRRRRK..',o.blink?'.KRRRRRRRRRRRKKK':'.KRWWRRRRRWWRKKK',o.blink?'.KRKKRRRRRKKRK.K':'.KRWKRRRRRWKRK.K','.KRRRRRRRRRRRK.K',o.smile?'.KRRKRRRRRKRRKKK':'.KRRRRRRRRRRRKKK',o.smile?'.KRRRKKKKKRRRK..':'.KRRRRKKKRRRRK..','..KRRRRRRRRRK...','...KKKKKKKKK....','.KKKKKKKKKKKKK..','..KAAAAAAAAAK...','...KKKKKKKKK....'];
+const _cup={};function cup(o){o=o||{};const k=JSON.stringify(o);return _cup[k]||(_cup[k]=gridURL(CUP_ROWS(o),8,true))}
+const RETICLE='<svg class="cross" id="cross" viewBox="0 0 44 44"><rect x="20" y="0" width="4" height="14" fill="#E50914"/><rect x="20" y="30" width="4" height="14" fill="#E50914"/><rect x="0" y="20" width="14" height="4" fill="#E50914"/><rect x="30" y="20" width="14" height="4" fill="#E50914"/><rect x="18" y="18" width="8" height="8" fill="#141414"/><rect x="8" y="8" width="28" height="28" fill="none" stroke="#141414" stroke-width="2" stroke-dasharray="4 4"/></svg>';
+
+/* =========================================================
+   Temas y banco de fragmentos
+   Contexto: v es int[], m es int[][] de 3×4, t es char[8][8],
+   r es Random, sc es Scanner, suma es int.
+   bug:true  → compila mal, falla al ejecutar o no hace lo que dice el comentario
+   ========================================================= */
+const TOPIC={
+ a1:{n:'Arrays 1D',ab:'1D',col:'#E50914'},
+ rec:{n:'Recorridos',ab:'FOR',col:'#2B6CB0'},
+ rnd:{n:'Random',ab:'RND',col:'#F5A524'},
+ m2:{n:'Matrices 2D',ab:'2D',col:'#2E9E5B'},
+ scn:{n:'Scanner',ab:'SCN',col:'#141414'}
+};
+const BANK=[
+ // ---------- Arrays 1D
+ {t:'a1',bug:1,c:'int[] v = new int[5];\nv[5] = 9;',x:'Los índices de un arreglo de 5 van de 0 a 4. v[5] lanza ArrayIndexOutOfBoundsException.'},
+ {t:'a1',bug:0,c:'int[] v = {3, 7, 1};\nSystem.out.println(v.length);',x:'Imprime 3. En los arreglos, length es un atributo, sin paréntesis.'},
+ {t:'a1',bug:1,c:'int[] v = {3, 7, 1};\nint n = v.length();',x:'No compila: en arreglos es v.length (atributo). length() es de String.'},
+ {t:'a1',bug:0,c:'int v[] = new int[4];',x:'Válido: Java acepta los corchetes después del nombre (estilo C), aunque se prefiere int[] v.'},
+ {t:'a1',bug:1,c:'int[] v = new int[];',x:'No compila: al usar new sin llaves hay que indicar el tamaño, por ejemplo new int[4].'},
+ {t:'a1',bug:0,c:'double[] p = new double[3];\nSystem.out.println(p[0]);',x:'Imprime 0.0: los arreglos numéricos se inicializan en cero.'},
+ {t:'a1',bug:1,c:'String[] s = new String[2];\nSystem.out.println(s[0].length());',x:'Los arreglos de objetos empiezan en null. s[0].length() lanza NullPointerException.'},
+ {t:'a1',bug:0,c:'int[] v = {1, 2, 3};\nint u = v[v.length - 1];\n// u = 3',x:'v.length - 1 es el índice del último elemento: u vale 3.'},
+ {t:'a1',bug:1,c:'int[] v = new int[3];\nv = {4, 5, 6};',x:'No compila: las llaves solas solo sirven al declarar. Usa v = new int[]{4, 5, 6};'},
+ {t:'a1',bug:0,c:'int[] v = new int[]{4, 5, 6};',x:'Válido: crea el arreglo y lo llena en una sola instrucción.'},
+ {t:'a1',bug:0,c:'int[] a = {1, 2};\nint[] b = a;\nb[0] = 9;\n// ahora a[0] también vale 9',x:'b = a copia la referencia, no los datos: a y b son el mismo arreglo.'},
+ {t:'a1',bug:1,c:'int[] a = {1, 2};\nint[] b = {1, 2};\nboolean eq = (a == b); // true',x:'== compara referencias: son dos arreglos distintos, eq es false. Usa Arrays.equals(a, b).'},
+ {t:'a1',bug:1,c:'char[] c = {\'h\', \'o\', \'l\', \'a\'};\nSystem.out.println(c[4]);',x:'Tiene 4 elementos (índices 0 a 3). c[4] se sale del arreglo.'},
+ {t:'a1',bug:0,c:'boolean[] f = new boolean[2];\n// f[1] vale false',x:'Los boolean de un arreglo nuevo empiezan en false.'},
+ {t:'a1',bug:1,c:'int[] v = new int[-1];',x:'Compila, pero al ejecutar lanza NegativeArraySizeException.'},
+ {t:'a1',bug:0,c:'int[] v = {5, 8};\nv[1]++;\n// v queda {5, 9}',x:'v[1]++ incrementa el segundo elemento: 8 pasa a 9.'},
+ // ---------- Recorridos
+ {t:'rec',bug:1,c:'for (int i = 0; i <= v.length; i++)\n  suma += v[i];',x:'Con <= la última vuelta usa v[v.length], que no existe. La condición correcta es i < v.length.'},
+ {t:'rec',bug:0,c:'for (int i = 0; i < v.length; i++)\n  suma += v[i];',x:'Recorrido clásico: i va de 0 a v.length - 1.'},
+ {t:'rec',bug:0,c:'for (int x : v)\n  suma += x;',x:'for-each: x toma cada valor del arreglo. Ideal para leer.'},
+ {t:'rec',bug:1,c:'for (int x : v) x = 0;\n// v queda lleno de ceros',x:'En for-each, x es una copia del valor. Cambiar x no modifica v; usa un for con índice.'},
+ {t:'rec',bug:0,c:'int max = v[0];\nfor (int x : v)\n  if (x > max) max = x;',x:'Empezar con v[0] garantiza que funcione incluso si todos son negativos.'},
+ {t:'rec',bug:1,c:'int max = 0;\nfor (int x : v)\n  if (x > max) max = x;\n// sirve si todos son negativos',x:'Si todos son negativos, max se queda en 0, que ni siquiera está en v. Empieza con max = v[0].'},
+ {t:'rec',bug:0,c:'for (int i = v.length - 1; i >= 0; i--)\n  System.out.print(v[i]);\n// imprime al revés',x:'Empieza en el último índice y baja hasta 0.'},
+ {t:'rec',bug:1,c:'for (int i = 1; i < v.length; i++)\n  suma += v[i];\n// suma todos los elementos',x:'Empieza en 1: se salta v[0].'},
+ {t:'rec',bug:1,c:'double prom = suma / v.length;\n// suma es int: prom con decimales',x:'int / int es división entera: se pierden los decimales. Usa (double) suma / v.length.'},
+ {t:'rec',bug:1,c:'System.out.println(v);\n// imprime los elementos de v',x:'Imprime algo como [I@1b6d3586 (la referencia). Usa Arrays.toString(v).'},
+ {t:'rec',bug:0,c:'int[] v = {3, 7, 1};\nSystem.out.println(Arrays.toString(v));\n// imprime [3, 7, 1]',x:'Arrays.toString (import java.util.Arrays) muestra el contenido.'},
+ {t:'rec',bug:0,c:'int c = 0;\nfor (int x : v)\n  if (x % 2 == 0) c++;\n// cuenta los pares',x:'x % 2 == 0 identifica los pares; c los cuenta.'},
+ {t:'rec',bug:1,c:'for (int i = 0; i < v.length; i++)\n  v[i] = v[i + 1];\n// corre todo a la izquierda',x:'En la última vuelta v[i + 1] se sale del arreglo. El límite debe ser v.length - 1.'},
+ {t:'rec',bug:0,c:'for (int i = 0; i < v.length / 2; i++) {\n  int tmp = v[i];\n  v[i] = v[v.length - 1 - i];\n  v[v.length - 1 - i] = tmp;\n} // invierte v',x:'Intercambia extremos hasta la mitad: invierte el arreglo.'},
+ // ---------- Random
+ {t:'rnd',bug:0,c:'int d = r.nextInt(6) + 1;\n// dado: 1 a 6',x:'nextInt(6) da 0..5; al sumar 1 queda 1..6.'},
+ {t:'rnd',bug:1,c:'int d = r.nextInt(6);\n// dado: 1 a 6',x:'nextInt(6) da 0 a 5, nunca 6. Falta el + 1.'},
+ {t:'rnd',bug:0,c:'int i = r.nextInt(v.length);\nv[i] = 0;\n// índice siempre válido',x:'nextInt(v.length) da 0..v.length-1: siempre es un índice válido.'},
+ {t:'rnd',bug:1,c:'int i = r.nextInt(v.length + 1);\nv[i] = 0;',x:'Puede salir v.length, que está fuera del arreglo.'},
+ {t:'rnd',bug:0,c:'Random r = new Random(42);\n// semilla fija: misma secuencia\n// en cada ejecución',x:'Con la misma semilla, Random genera los mismos números. Útil para probar.'},
+ {t:'rnd',bug:1,c:'int n = r.nextInt(10, 20);\n// de 10 a 20',x:'En Java 17+ nextInt(origen, límite) excluye el límite: da 10 a 19.'},
+ {t:'rnd',bug:0,c:'int x = (int) (Math.random() * 10);\n// de 0 a 9',x:'Math.random() da [0, 1). Por 10 y truncado: 0..9.'},
+ {t:'rnd',bug:0,c:'boolean cara = r.nextBoolean();',x:'nextBoolean devuelve true o false con igual probabilidad.'},
+ {t:'rnd',bug:1,c:'Random r = new Random();\nint d = Random.nextInt(6);',x:'No compila: nextInt no es estático. Se llama sobre el objeto: r.nextInt(6).'},
+ {t:'rnd',bug:1,c:'int n = r.nextInt(0);',x:'El límite debe ser positivo: lanza IllegalArgumentException.'},
+ {t:'rnd',bug:0,c:'int f = r.nextInt(m.length);\nint c = r.nextInt(m[0].length);\nm[f][c] = 9; // celda válida',x:'Filas con m.length y columnas con m[0].length: siempre una celda válida.'},
+ {t:'rnd',bug:1,c:'int f = r.nextInt(m[0].length);\nint c = r.nextInt(m.length);\nm[f][c] = 9; // m es 3×4',x:'Intercambió filas y columnas: f puede valer 3 y m solo tiene filas 0..2.'},
+ {t:'rnd',bug:0,c:'for (int i = 0; i < v.length; i++)\n  v[i] = r.nextInt(100);\n// valores de 0 a 99',x:'Llena todo el arreglo con números entre 0 y 99.'},
+ // ---------- Matrices 2D
+ {t:'m2',bug:0,c:'int[][] m = new int[3][4];\n// 3 filas y 4 columnas',x:'El primer tamaño son las filas y el segundo las columnas.'},
+ {t:'m2',bug:1,c:'int[][] m = new int[3][4];\nm[3][0] = 1;',x:'Las filas van de 0 a 2: m[3] no existe.'},
+ {t:'m2',bug:0,c:'int[][] m = new int[3][4];\nint cols = m[0].length; // 4',x:'m[0] es la primera fila; su length es el número de columnas.'},
+ {t:'m2',bug:1,c:'int[][] m = new int[3][4];\nint filas = m.length; // 4',x:'m.length es el número de filas: 3.'},
+ {t:'m2',bug:0,c:'for (int i = 0; i < m.length; i++)\n  for (int j = 0; j < m[i].length; j++)\n    m[i][j] = i * j;',x:'Doble for correcto: i recorre filas y j las columnas de cada fila.'},
+ {t:'m2',bug:1,c:'for (int i = 0; i < m.length; i++)\n  for (int j = 0; j < m.length; j++)\n    suma += m[i][j];\n// suma toda m (3×4)',x:'j usa m.length (3) en vez de m[i].length (4): nunca suma la última columna.'},
+ {t:'m2',bug:0,c:'int[][] m = {{1, 2}, {3, 4}};\nSystem.out.println(m[1][0]); // 3',x:'Fila 1 = {3, 4}; columna 0 = 3.'},
+ {t:'m2',bug:1,c:'int[][] m = {{1, 2}, {3, 4}};\nSystem.out.println(m[0][1]); // 3',x:'Fila 0 = {1, 2}; columna 1 = 2, no 3.'},
+ {t:'m2',bug:0,c:'int[][] m = new int[2][];\nm[0] = new int[3];\nm[1] = new int[5];',x:'Matriz irregular: cada fila puede tener su propio tamaño.'},
+ {t:'m2',bug:1,c:'int[][] m = new int[][3];',x:'No compila: la primera dimensión (filas) es obligatoria.'},
+ {t:'m2',bug:0,c:'char[][] t = new char[8][8];\nt[f][c] = \'X\';\n// f = fila, c = columna',x:'Notación [fila][columna]: primero la fila y luego la columna.'},
+ {t:'m2',bug:0,c:'for (int i = 0; i < m.length; i++)\n  diag += m[i][i];\n// m es cuadrada: suma la diagonal',x:'En la diagonal principal fila = columna.'},
+ {t:'m2',bug:1,c:'int[][] m = {{1, 2}, {3, 4}};\nm[1] = {7, 8};',x:'No compila: usa m[1] = new int[]{7, 8};'},
+ {t:'m2',bug:0,c:'for (int[] fila : m)\n  for (int x : fila)\n    suma += x;',x:'for-each anidado: cada fila es un int[], y luego cada x.'},
+ // ---------- Scanner
+ {t:'scn',bug:0,c:'Scanner sc = new Scanner(System.in);\nint n = sc.nextInt();',x:'Así se lee un entero del teclado (import java.util.Scanner).'},
+ {t:'scn',bug:1,c:'Scanner sc = new Scanner();',x:'No compila: Scanner necesita una fuente, por ejemplo System.in.'},
+ {t:'scn',bug:1,c:'int edad = sc.nextInt();\nString nom = sc.nextLine();\n// nom recibe el nombre',x:'nextInt deja el Enter pendiente; nextLine lo consume y devuelve "". Agrega un sc.nextLine() en medio.'},
+ {t:'scn',bug:0,c:'int edad = sc.nextInt();\nsc.nextLine();\nString nom = sc.nextLine();',x:'El nextLine() del medio limpia el Enter pendiente. Ahora sí lee el nombre.'},
+ {t:'scn',bug:0,c:'int[] v = new int[sc.nextInt()];',x:'El tamaño se puede decidir al ejecutar, con lo que escriba el usuario.'},
+ {t:'scn',bug:0,c:'for (int i = 0; i < v.length; i++)\n  v[i] = sc.nextInt();',x:'Llena el arreglo leyendo un número por posición.'},
+ {t:'scn',bug:1,c:'String s = sc.next();\n// usuario: Ana María → s = "Ana María"',x:'next() lee hasta el primer espacio: s = "Ana". Para la línea completa usa nextLine().'},
+ {t:'scn',bug:1,c:'char op = sc.nextChar();',x:'Scanner no tiene nextChar(). Usa sc.next().charAt(0).'},
+ {t:'scn',bug:0,c:'char op = sc.next().charAt(0);',x:'Lee una palabra y toma su primer carácter.'},
+ {t:'scn',bug:0,c:'int f = sc.nextInt() - 1;\nt[f][0] = \'X\';\n// el usuario cuenta filas desde 1',x:'Restar 1 convierte la fila "humana" (1..8) en índice (0..7).'},
+ {t:'scn',bug:0,c:'while (!sc.hasNextInt()) sc.next();\nint n = sc.nextInt();',x:'Descarta lo que no sea entero antes de leer: evita InputMismatchException.'},
+ {t:'scn',bug:1,c:'String linea = sc.nextLine();\nint n = linea.length;',x:'Al revés que en arreglos: en String, length() es un método con paréntesis.'},
+ {t:'scn',bug:0,c:'int n = sc.nextInt();\nint[][] m = new int[n][n];',x:'Matriz cuadrada del tamaño que elija el usuario.'}
+];
+/* Jefes: ops[0] es la respuesta correcta (el juego las baraja).
+   "Error" = compila, pero lanza una excepción al ejecutar.
+   in  = lo que escribe el usuario (preguntas de Scanner).
+   chk = cómo se valida una pregunta de Random (never / max / min / count).
+   Todas las respuestas se comprobaron ejecutando el código en Java. */
+const BOSS=[
+ // ---------- Arrays 1D
+ {t:'a1',q:'¿Qué imprime?',c:'int[] v = {4, 1, 7};\nSystem.out.print(v[1] + v.length);',ops:['4','13','1'],x:'v[1] = 1 y v.length = 3; ambos son int, así que se suman: 4.'},
+ {t:'a1',q:'¿Qué imprime?',c:'int[] v = new int[3];\nv[1] = 5;\nSystem.out.print(v[0] + v[1] + v[2]);',ops:['5','0','Error'],x:'v[0] y v[2] valen 0 por defecto: 0 + 5 + 0 = 5.'},
+ {t:'a1',q:'¿Qué imprime?',c:'int[] v = {5, 3, 8};\nv[0] = v[2];\nSystem.out.print(v[0] + v[2]);',ops:['16','13','11'],x:'v[0] toma el valor de v[2] (8): 8 + 8 = 16.'},
+ {t:'a1',q:'¿Qué imprime?',c:'int[] a = {1, 2, 3};\nint[] b = a;\nb[1] = 7;\nSystem.out.print(a[1]);',ops:['7','2','1'],x:'b = a copia la referencia: a y b son el mismo arreglo, así que a[1] también vale 7.'},
+ {t:'a1',q:'¿Qué imprime?',c:'String[] s = new String[2];\nSystem.out.print(s[1]);',ops:['null','0','Error'],x:'Los arreglos de objetos empiezan en null. Imprimir null no falla; lo que fallaría es llamar un método, como s[1].length().'},
+ {t:'a1',q:'¿Qué imprime?',c:'int[] v = new int[4];\nSystem.out.print(v[4]);',ops:['Error','0','4'],x:'Los índices van de 0 a 3: v[4] lanza ArrayIndexOutOfBoundsException.'},
+ {t:'a1',q:'¿Qué imprime?',c:'char[] c = {\'J\', \'a\', \'v\', \'a\'};\nSystem.out.print(c[c.length - 1]);',ops:['a','J','Error'],x:'c.length - 1 = 3 es el último índice: c[3] = \'a\'.'},
+ {t:'a1',q:'¿Qué imprime?',c:'double[] p = {1.5, 2.5};\nSystem.out.print(p[0] + p[1]);',ops:['4.0','4','3.5'],x:'Es una suma de double: 1.5 + 2.5 = 4.0 (con el .0).'},
+ {t:'a1',q:'¿Qué imprime?',c:'int[] v = {2, 4, 6};\nv[1]++;\nv[2] = v[1] * 2;\nSystem.out.print(v[2]);',ops:['10','12','8'],x:'v[1]++ deja v[1] = 5, y luego v[2] = 5 * 2 = 10.'},
+ // ---------- Recorridos
+ {t:'rec',q:'¿Qué imprime?',c:'int s = 0;\nfor (int i = 0; i < 4; i++) s += i;\nSystem.out.print(s);',ops:['6','10','4'],x:'i toma 0, 1, 2 y 3: la suma es 6.'},
+ {t:'rec',q:'¿Qué imprime?',c:'int[] v = {2, 4, 6};\nfor (int i = 0; i < v.length; i++)\n  v[i] /= 2;\nSystem.out.print(v[2]);',ops:['3','6','2'],x:'Cada elemento se divide entre 2: v queda {1, 2, 3}.'},
+ {t:'rec',q:'¿Qué imprime?',c:'int[] v = {3, 8, 1, 6};\nint c = 0;\nfor (int x : v)\n  if (x > 4) c++;\nSystem.out.print(c);',ops:['2','3','14'],x:'Solo 8 y 6 son mayores que 4: c = 2.'},
+ {t:'rec',q:'¿Qué imprime?',c:'int[] v = {1, 2, 3, 4};\nfor (int i = v.length - 1; i >= 0; i -= 2)\n  System.out.print(v[i]);',ops:['42','31','4321'],x:'i vale 3 y luego 1 (baja de 2 en 2): imprime v[3] = 4 y v[1] = 2.'},
+ {t:'rec',q:'¿Cuántas vueltas da?',c:'int n = 0;\nfor (int i = 0; i < 10; i += 3) n++;\nSystem.out.print(n);',ops:['4','3','10'],x:'i toma 0, 3, 6 y 9: son 4 vueltas.'},
+ {t:'rec',q:'¿Qué imprime?',c:'int[] v = {5, -2, 9, -7};\nint min = v[0];\nfor (int x : v)\n  if (x < min) min = x;\nSystem.out.print(min);',ops:['-7','-2','5'],x:'Busca el menor: -7.'},
+ {t:'rec',q:'¿Qué imprime?',c:'int[] v = {1, 2, 3};\nfor (int x : v) x *= 10;\nSystem.out.print(v[0]);',ops:['1','10','0'],x:'En for-each, x es una copia: el arreglo no cambia y v[0] sigue en 1.'},
+ {t:'rec',q:'¿Qué imprime?',c:'int[] v = {4, 7, 2};\nint s = 0;\nfor (int i = 0; i < v.length; i++)\n  s += v[i] * i;\nSystem.out.print(s);',ops:['11','13','26'],x:'4·0 + 7·1 + 2·2 = 0 + 7 + 4 = 11.'},
+ // ---------- Random
+ {t:'rnd',q:'¿Qué valor NUNCA puede salir?',c:'Random r = new Random();\nint x = r.nextInt(3);',ops:['3','0','2'],chk:{kind:'never',expr:'r.nextInt(3)'},x:'nextInt(3) devuelve 0, 1 o 2; el límite queda excluido.'},
+ {t:'rnd',q:'¿Cuál es el valor MÁXIMO posible?',c:'int d = r.nextInt(5) + 2;',ops:['6','7','5'],chk:{kind:'max',expr:'r.nextInt(5) + 2'},x:'nextInt(5) da 0..4; más 2 queda 2..6.'},
+ {t:'rnd',q:'¿Qué valor NUNCA puede salir?',c:'int x = r.nextInt(4) * 2;',ops:['3','0','6'],chk:{kind:'never',expr:'r.nextInt(4) * 2'},x:'nextInt(4) da 0..3; por 2 queda 0, 2, 4 o 6: siempre par.'},
+ {t:'rnd',q:'¿Cuál es el valor MÍNIMO posible?',c:'int x = r.nextInt(10) + 5;',ops:['5','0','1'],chk:{kind:'min',expr:'r.nextInt(10) + 5'},x:'nextInt(10) puede dar 0; 0 + 5 = 5.'},
+ {t:'rnd',q:'¿Qué valor NUNCA puede salir?',c:'int[] v = {10, 20, 30, 40};\nint x = v[r.nextInt(v.length)];',pre:'int[] v = {10, 20, 30, 40};',ops:['0','10','40'],chk:{kind:'never',expr:'v[r.nextInt(v.length)]'},x:'Sale un índice 0..3, y x es el VALOR en esa posición: 10, 20, 30 o 40. Nunca 0.'},
+ {t:'rnd',q:'¿Cuántos valores distintos pueden salir?',c:'int d = r.nextInt(6) + 1;',ops:['6','7','5'],chk:{kind:'count',expr:'r.nextInt(6) + 1'},x:'Sale 1, 2, 3, 4, 5 o 6: seis valores.'},
+ {t:'rnd',q:'¿Qué imprime?',c:'Random a = new Random(7);\nRandom b = new Random(7);\nSystem.out.print(a.nextInt(100) == b.nextInt(100));',ops:['true','false','Depende'],x:'Misma semilla, misma secuencia: los dos sacan el mismo número.'},
+ {t:'rnd',q:'¿Qué valor NUNCA puede salir?',c:'int x = r.nextInt(3) - 1;',ops:['-2','-1','1'],chk:{kind:'never',expr:'r.nextInt(3) - 1'},x:'nextInt(3) da 0..2; menos 1 queda -1, 0 o 1.'},
+ {t:'rnd',q:'m es int[3][4]. ¿Valor MÁXIMO de f?',c:'int f = r.nextInt(m.length);',pre:'int[][] m = new int[3][4];',ops:['2','3','4'],chk:{kind:'max',expr:'r.nextInt(m.length)'},x:'m.length = 3 filas: nextInt(3) da 0, 1 o 2.'},
+ // ---------- Matrices 2D
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = {{1, 2, 3}, {4, 5, 6}};\nSystem.out.print(m[1][2] - m.length);',ops:['4','3','1'],x:'m[1][2] = 6 y m.length = 2 filas: 6 - 2 = 4.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = new int[2][3];\nSystem.out.print(m.length * m[0].length);',ops:['6','5','9'],x:'2 filas × 3 columnas = 6 celdas.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = {{1, 2}, {3, 4}};\nint s = 0;\nfor (int[] f : m) s += f[0];\nSystem.out.print(s);',ops:['4','3','10'],x:'Suma la primera columna de cada fila: 1 + 3 = 4.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = {{1, 2, 3}, {4, 5, 6}};\nSystem.out.print(m[0].length + m.length);',ops:['5','6','4'],x:'3 columnas + 2 filas = 5.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = {{2, 4}, {6, 8}};\nint s = 0;\nfor (int i = 0; i < m.length; i++)\n  s += m[i][i];\nSystem.out.print(s);',ops:['10','20','14'],x:'Diagonal principal: m[0][0] + m[1][1] = 2 + 8 = 10.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = new int[3][2];\nm[2][1] = 7;\nSystem.out.print(m[1][2]);',ops:['Error','7','0'],x:'m tiene 2 columnas (0 y 1): m[1][2] lanza ArrayIndexOutOfBoundsException. ¡Fila y columna invertidas!'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = new int[2][];\nm[0] = new int[4];\nm[1] = new int[1];\nSystem.out.print(m[0].length - m[1].length);',ops:['3','0','Error'],x:'Matriz irregular: la fila 0 tiene 4 columnas y la fila 1 tiene 1. 4 - 1 = 3.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = {{1, 2}, {3, 4}, {5, 6}};\nint s = 0;\nfor (int[] f : m) s += f[1];\nSystem.out.print(s);',ops:['12','9','21'],x:'Suma la columna 1 de cada fila: 2 + 4 + 6 = 12.'},
+ {t:'m2',q:'¿Qué imprime?',c:'int[][] m = new int[2][3];\nfor (int i = 0; i < m.length; i++)\n  for (int j = 0; j < m[i].length; j++)\n    m[i][j] = i + j;\nSystem.out.print(m[1][2]);',ops:['3','2','Error'],x:'m[1][2] = 1 + 2 = 3. La celda existe: fila 1 de 0..1, columna 2 de 0..2.'},
+ // ---------- Scanner
+ {t:'scn',q:'El usuario escribe: 3 8. ¿Qué imprime?',in:'3 8\n',c:'int a = sc.nextInt();\nint b = sc.nextInt();\nSystem.out.print(b - a);',ops:['5','-5','11'],x:'a = 3 y b = 8: 8 - 3 = 5.'},
+ {t:'scn',q:'El usuario escribe: Hola mundo. ¿Qué imprime?',in:'Hola mundo\n',c:'String s = sc.next();\nSystem.out.print(s.length());',ops:['4','10','5'],x:'next() solo lee "Hola": 4 letras.'},
+ {t:'scn',q:'El usuario escribe: 2. ¿Qué imprime?',in:'2\n',c:'int[] v = {10, 20, 30};\nint i = sc.nextInt();\nSystem.out.print(v[i]);',ops:['30','20','Error'],x:'i = 2 → v[2] = 30 (los índices empiezan en 0).'},
+ {t:'scn',q:'El usuario escribe: 5. ¿Qué imprime?',in:'5\n',c:'int n = sc.nextInt();\nint[] v = new int[n];\nSystem.out.print(v.length - 1);',ops:['4','5','Error'],x:'El arreglo tiene 5 posiciones; el último índice es 4.'},
+ {t:'scn',q:'El usuario escribe 7, Enter, Ana, Enter. ¿Qué imprime?',in:'7\nAna\n',c:'int e = sc.nextInt();\nString s = sc.nextLine();\nSystem.out.print(s.length());',ops:['0','3','Error'],x:'nextInt deja el Enter pendiente; nextLine lo consume y devuelve "" (longitud 0).'},
+ {t:'scn',q:'El usuario escribe: 3 4. ¿Qué imprime?',in:'3 4\n',c:'int f = sc.nextInt() - 1;\nint c = sc.nextInt() - 1;\nSystem.out.print(f + "," + c);',ops:['2,3','3,4','1,2'],x:'El usuario cuenta desde 1; al restar 1 quedan los índices 2 y 3.'},
+ {t:'scn',q:'El usuario escribe: hola. ¿Qué imprime?',in:'hola\n',c:'int n = sc.nextInt();\nSystem.out.print(n);',ops:['Error','0','hola'],x:'"hola" no es un entero: nextInt lanza InputMismatchException.'},
+ {t:'scn',q:'El usuario escribe: 1 2 3. ¿Qué imprime?',in:'1 2 3\n',c:'int[] v = new int[3];\nfor (int i = 0; i < v.length; i++)\n  v[i] = sc.nextInt();\nSystem.out.print(v[0] + v[2]);',ops:['4','3','6'],x:'v queda {1, 2, 3}: v[0] + v[2] = 1 + 3 = 4.'},
+ {t:'scn',q:'El usuario escribe: Ana María. ¿Qué imprime?',in:'Ana María\n',c:'String s = sc.nextLine();\nSystem.out.print(s.length());',ops:['9','3','8'],x:'nextLine lee la línea completa, con el espacio: "Ana María" tiene 9 caracteres.'}
+];
+const ALL=['a1','rec','rnd','m2','scn'];
+/* boss: un arreglo de temas por cada jefe. Sin rush: el primero sale a mitad de la oleada y el resto al final. */
+const WAVES=[
+ {t:'Arrays 1D',sub:'Índices, length y valores por defecto',src:[[['a1'],6]],boss:[['a1'],['a1']],at:1,speed:62,life:10500},
+ {t:'Recorridos',sub:'for, for-each: sumar, contar y buscar',src:[[['rec'],6]],boss:[['rec'],['rec']],at:1,speed:70,life:10500},
+ {t:'Random',sub:'nextInt, rangos y semillas',src:[[['rnd'],6]],boss:[['rnd'],['rnd']],at:2,speed:78,life:10500},
+ {t:'Matrices 2D',sub:'[fila][columna] y doble for',src:[[['m2'],6]],boss:[['m2'],['m2']],at:2,speed:86,life:11000},
+ {t:'Scanner',sub:'Entrada por teclado',src:[[['scn'],6]],boss:[['scn'],['scn']],at:2,speed:94,life:10500},
+ {t:'Jefe final',sub:'Repaso de todo y tres jefes seguidos',src:[[ALL,5]],boss:[ALL,ALL,ALL],rush:true,final:true,at:2,speed:102,life:9500}
+];
+const N_JEFES=WAVES.reduce((s,W)=>s+W.boss.length,0);
+const MULT_MAX=8;
+
+/* =========================================================
+   Sonido 8-bit
+   ========================================================= */
+let AC=null,MUTED=false;try{MUTED=localStorage.getItem('cb_mute')==='1'}catch(e){}
+function tone(f,d,type,v,slide){if(MUTED)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,AC.currentTime);if(slide)o.frequency.exponentialRampToValueAtTime(slide,AC.currentTime+d);g.gain.setValueAtTime(v||.08,AC.currentTime);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+function noise(d){if(MUTED)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate),c=b.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=(Math.random()*2-1)*(1-i/c.length);const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=.12;s.buffer=b;s.connect(g);g.connect(AC.destination);s.start()}catch(e){}}
+const SFX={shot:()=>noise(.12),hit:()=>{tone(880,.08);setTimeout(()=>tone(1320,.12),80)},bad:()=>tone(160,.35,'sawtooth',.09,80),pass:()=>tone(660,.15,'triangle',.08,990),empty:()=>tone(90,.05,'square',.05),wave:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.12),i*110))},boss:()=>{[196,196,233,262].forEach((f,i)=>setTimeout(()=>tone(f,.16,'sawtooth',.07),i*140))},over:()=>{[523,392,330,262].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle'),i*170))}};
+
+/* =========================================================
+   Utilidades
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function hl(src){
+ const re=/(\/\/.*$)|("[^"\n]*"|'[^'\n]*')|\b(int|double|char|boolean|String|new|for|if|while|else|return|null|true|false)\b|\b(Random|Scanner|System|Arrays|Math)\b|(\b\d+\b)/gm;
+ let out='',i=0,m;
+ while((m=re.exec(src))){out+=esc(src.slice(i,m.index));const cls=m[1]?'cm':m[2]?'st':m[3]?'kw':m[4]?'ty':'nu';out+=`<span class="${cls}">${esc(m[0])}</span>`;i=re.lastIndex}
+ return out+esc(src.slice(i));
+}
+const AUTHOR='JOSE FABIAN DIAZ SILVA';
+const foot=extra=>`<div class="foot"><span>${extra}</span><span class="author">Autor: <b>${AUTHOR}</b></span></div>`;
+
+/* =========================================================
+   Estado
+   ========================================================= */
+let G=null,raf=null;
+function buildWaves(){
+ const used=new Set(),usedB=new Set();
+ return WAVES.map(W=>{
+  let rounds=[];
+  W.src.forEach(([topics,n])=>{
+   const pool=shuffle(BANK.filter(b=>topics.includes(b.t)&&!used.has(b)));
+   const bugs=pool.filter(b=>b.bug),oks=pool.filter(b=>!b.bug);
+   const nb=Math.random()<.5?Math.ceil(n/2):Math.floor(n/2);
+   const pick=bugs.slice(0,nb).concat(oks.slice(0,n-nb));
+   pick.forEach(b=>{used.add(b);rounds.push({kind:'snip',item:b})});
+  });
+  rounds=shuffle(rounds);
+  // Jefes: nunca se repite uno en la misma partida; en el jefe final se prefieren temas distintos
+  const temas=new Set();
+  const bosses=W.boss.map((tp,k)=>{
+   const libres=BOSS.filter(b=>tp.includes(b.t)&&!usedB.has(b));
+   const pool=libres.filter(b=>!temas.has(b.t)).length?libres.filter(b=>!temas.has(b.t)):libres.length?libres:BOSS.filter(b=>tp.includes(b.t));
+   const bp=shuffle(pool)[0];usedB.add(bp);temas.add(bp.t);
+   return {kind:'boss',item:bp,bossNo:k+1,bossOf:W.boss.length};
+  });
+  if(W.rush)rounds=rounds.concat(bosses);
+  else{const mid=Math.ceil(rounds.length/2);rounds.splice(mid,0,bosses[0]);rounds=rounds.concat(bosses.slice(1))}
+  rounds.forEach(r=>{r.ammo=3;r.res=null;r.spawned=false});
+  return rounds;
+ });
+}
+function newGame(from,solo){G={wave:from||0,from:from||0,solo:!!solo,waves:buildWaves(),ri:0,lives:5,score:0,combo:0,best:0,shots:0,hits:0,live:[],log:[],paused:true,last:0,nextSpawn:0,boss:null,minY:6}}
+const curRounds=()=>G.waves[G.wave];
+
+/* =========================================================
+   Pantallas
+   ========================================================= */
+function intro(){
+ if(G){G.paused=true;cancelAnimationFrame(raf)}
+ const best=LS.get('cb_best',0);
+ const ex1={kind:'snip',item:{t:'a1',bug:1,c:'int[] v = new int[5];\nv[5] = 9;'}},ex2={kind:'snip',item:{t:'rnd',bug:0,c:'int d = r.nextInt(6) + 1;\n// dado: 1 a 6'}};
+ $('#app').innerHTML=`<section class="intro">
+ <div><div class="kicker rv">Mini juego · arreglos en Java</div>
+ <h1 class="h1 rv" style="--d:1;margin:12px 0 14px">Caza<br>el <span style="color:var(--red)">bug</span></h1>
+ <p class="rv" style="--d:2;font-size:17px;max-width:580px">Carteles con código Java cruzan el cielo. Algunos tienen un <b>bug</b>: no compilan, fallan al ejecutar o no hacen lo que dice su comentario. ¡Dispárales! Deja escapar el código correcto.</p>
+ <div class="rules">
+  <div class="rule rv" style="--d:3"><b>🎯 Bug derribado</b><span class="small muted">+100 puntos × combo</span></div>
+  <div class="rule rv" style="--d:4"><b>✓ Código correcto que escapa</b><span class="small muted">+50 puntos y suma combo</span></div>
+  <div class="rule rv" style="--d:5"><b>✗ Disparar a código correcto</b><span class="small muted">Pierdes una vida</span></div>
+  <div class="rule rv" style="--d:6"><b>✗ Bug que escapa</b><span class="small muted">Pierdes una vida</span></div>
+  <div class="rule boss rv" style="--d:7"><span style="font-size:30px">👑</span><span><b>Jefes de oleada: ¿Qué imprime?</b><span class="small" style="color:#cfcfcf">A mitad y al final de cada oleada llega un jefe con 3 respuestas. Dispara a la correcta antes de que se vaya: +300 × combo. Si se escapa o fallas, pierdes una vida.</span></span></div>
+ </div>
+ <div class="ctx rv" style="--d:8"><b>Contexto:</b> si no se declaran, <code>v</code> es <code>int[]</code>, <code>m</code> es <code>int[][]</code> de 3×4, <code>t</code> es <code>char[8][8]</code>, <code>r</code> es <code>Random</code>, <code>sc</code> es <code>Scanner</code> y <code>suma</code> es <code>int</code>.</div>
+ <div class="actions rv" style="--d:9"><button class="btn" id="go">¡A cazar! ▸</button><span class="chip">${WAVES.length} oleadas · ${N_JEFES} jefes · 3 cartuchos por ronda</span>${best?`<span class="chip">Récord: ${best}</span>`:''}</div>
+ <div class="levels rv" style="--d:10"><span class="small muted">Practicar una oleada:</span>${WAVES.map((W,i)=>`<button class="chip lvl" data-l="${i}">${i+1} · ${W.t}</button>`).join('')}</div>
+ </div>
+ <div class="demo rv" style="--d:3"><div class="kicker" style="position:absolute;top:12px;left:16px">Ejemplos</div>
+  ${targetHTML(ex1,'d1')}${targetHTML(ex2,'d2')}
+  <span class="chip" style="position:absolute;left:20px;bottom:16px;border-color:var(--red);color:var(--red)">BUG → ¡dispara!</span>
+  <span class="chip" style="position:absolute;right:20px;bottom:16px;border-color:var(--green);color:var(--green)">CORRECTO → déjalo ir</span>
+  <div class="topics" style="position:absolute;left:20px;right:20px;bottom:52px">${Object.values(TOPIC).map(t=>`<span class="tchip" style="background:${t.col}">${t.ab} · ${t.n}</span>`).join('')}</div>
+ </div></section>
+ ${foot('Caza-Bugs · Arrays en Java · Programación de Computadores. Al final verás un repaso de cada ronda con la explicación.')}`;
+ const d1=$('#d1'),d2=$('#d2');d1.style.transform='translate(10px,36px) rotate(-3deg)';d2.style.left='auto';d2.style.right='14px';d2.style.transform='translate(0,140px) rotate(3deg)';
+ $('#go').onclick=()=>start(0,false);
+ document.querySelectorAll('.lvl').forEach(b=>b.onclick=()=>start(+b.dataset.l,true));
+}
+function signHTML(item){const T=TOPIC[item.t];return `<div class="sign"><div class="tico" style="background:${T.col}">${T.ab}</div><div class="code">${hl(item.c)}</div></div>`}
+function birds(){return `<div class="birds"><img class="px a" src="${BIRD_A}" alt=""><img class="px b" src="${BIRD_B}" alt=""></div><span class="str l"></span><span class="str r"></span>`}
+function targetHTML(round,id){return `<div class="target" id="${id}">${birds()}${signHTML(round.item)}</div>`}
+function optHTML(val,id){return `<div class="target opt" id="${id}">${birds()}<div class="sign"><div class="val">${esc(val)}</div></div></div>`}
+function arenaHTML(){
+ return `<div class="hud" id="hud"></div>
+ <div class="arena" id="arena"><div class="gridbg"></div>
+  ${[0,1,2].map(i=>`<img class="px cloud" src="${CLOUD}" alt="" style="top:${30+i*70}px;width:${140-i*20}px;animation-duration:${50+i*18}s;animation-delay:-${i*17}s">`).join('')}
+  <img class="px bush" src="${BUSH}" alt="" style="left:4%;width:160px"><img class="px bush" src="${BUSH}" alt="" style="right:6%;width:200px">
+  <div class="dog" id="dog"><div class="bub" id="bub"></div><img class="px" alt="" src="${cup({smile:true})}"></div>
+  <div class="ground"><div class="msg" id="msg"><b>LISTO</b><span>Apunta con el mouse (o toca la pantalla) y dispara a los carteles con bug.</span></div></div>
+  <div class="flash" id="flash"></div>${RETICLE}
+ </div>${foot('Esc = pausa · Caza-Bugs · Arrays en Java')}`;
+}
+function hud(){
+ const R=curRounds();const owner=G.live.find(o=>o.state==='fly');const shells=owner?owner.round.ammo:3;
+ const track=R.map(r=>`<i class="${r.kind==='boss'?'boss ':''}${r.res==='ok'?'ok':r.res==='bad'?'bad':r.spawned&&!r.res?'cur':''}"></i>`).join('');
+ const live=G.live.find(o=>o.state==='fly');const T=live?TOPIC[live.round.item.t]:TOPIC[WAVES[G.wave].src[0][0][0]];
+ $('#hud').innerHTML=`<div class="box"><span class="lbl">OLEADA</span><span class="val">${G.wave+1}/${WAVES.length}</span></div>
+ <div class="box"><span class="lbl">PUNTOS</span><span class="val">${G.score}</span></div>
+ <div class="box"><span class="lbl">COMBO</span><span class="val" style="color:var(--red)">×${Math.max(1,Math.min(MULT_MAX,G.combo))}</span></div>
+ <div class="box"><span class="lbl">VIDAS</span><span class="hearts">${[0,1,2,3,4].map(i=>`<i class="${i<G.lives?'':'off'}"></i>`).join('')}</span></div>
+ <div class="box"><span class="lbl">CARTUCHOS</span><span class="shells">${[0,1,2].map(i=>`<i class="${i<shells?'':'off'}"></i>`).join('')}</span></div>
+ <div class="box"><span class="track">${track}</span></div>
+ <span class="tchip" style="background:${T.col}">${T.ab} · ${T.n}</span>
+ <button class="chip mute" id="mute">${MUTED?'🔇 Sonido':'🔊 Sonido'}</button>`;
+ $('#mute').onclick=e=>{e.stopPropagation();MUTED=!MUTED;try{localStorage.setItem('cb_mute',MUTED?'1':'0')}catch(err){}hud()};
+}
+function start(from,solo){newGame(from,solo);$('#app').innerHTML=arenaHTML();hud();bindArena();waveCard()}
+function waveCard(){
+ const W=WAVES[G.wave];G.paused=true;SFX.wave();
+ const tops=[...new Set(W.src.flatMap(s=>s[0]))];
+ const o=document.createElement('div');o.className='overlay';o.innerHTML=`<div class="card"><div class="kicker">${G.solo?'Práctica · ':''}Oleada ${G.wave+1} de ${WAVES.length}</div><div class="big">${W.final?'👑':G.wave+1}</div><div class="h3">${W.t}</div><p class="small muted" style="margin:4px 0 10px">${W.sub}</p><div class="topics" style="justify-content:center;margin:0 0 10px">${tops.map(k=>`<span class="tchip" style="background:${TOPIC[k].col}">${TOPIC[k].ab} · ${TOPIC[k].n}</span>`).join('')}</div><p class="small muted" style="margin:8px 0 14px">${G.wave===0?'Lee con calma: ¿el código tiene bug?':'Más rápido. ¡Concéntrate!'} · 👑 ${W.rush?'Al final, '+W.boss.length+' jefes seguidos.':'Un jefe a mitad y otro al final.'}</p><button class="btn" id="wgo">Empezar ▸</button></div>`;
+ $('#arena').appendChild(o);$('#wgo').onclick=e=>{e.stopPropagation();o.remove();G.paused=false;G.last=performance.now();G.nextSpawn=0;loop()};
+}
+function makeFlyer(node,round,extra){
+ const W=WAVES[G.wave],ar=$('#arena');
+ const w=node.offsetWidth,h=node.offsetHeight,AW=ar.clientWidth,AH=ar.clientHeight-86;
+ const fromLeft=Math.random()<.5;
+ const o=Object.assign({round,el:node,w,h,x:fromLeft?-w*0.3:AW-w*0.7,y:Math.max(G.minY,AH*0.35+Math.random()*AH*0.2),vx:(fromLeft?1:-1)*W.speed*(0.7+Math.random()*.6),vy:-W.speed*(0.8+Math.random()*.4),born:performance.now(),life:W.life,state:'fly',rot:0},extra||{});
+ if(AW<520){o.x=Math.random()*Math.max(1,AW-w);o.vx*=.6}
+ G.live.push(o);return o;
+}
+function spawn(){
+ const R=curRounds();const round=R[G.ri];if(!round||round.kind!=='snip')return;G.ri++;round.spawned=true;
+ const el=document.createElement('div');el.innerHTML=targetHTML(round,'t'+G.wave+'_'+G.ri);const node=el.firstElementChild;$('#arena').appendChild(node);
+ makeFlyer(node,round);hud();msg('¿TIENE BUG?','Si no compila, falla al ejecutar o no hace lo que dice el comentario: ¡dispara!');
+}
+function spawnBoss(){
+ const R=curRounds();const round=R[G.ri];G.ri++;round.spawned=true;const b=round.item;SFX.boss();
+ const ar=$('#arena');const p=document.createElement('div');p.className='bosspanel';p.id='boss';
+ p.innerHTML=`<div class="kicker">👑 ${WAVES[G.wave].final?'Jefe final':'Jefe de oleada'} ${round.bossNo}/${round.bossOf} · ${TOPIC[b.t].n}</div><div class="q">${esc(b.q)}</div><div class="code">${hl(b.c)}</div>`;
+ ar.appendChild(p);G.minY=p.offsetTop+p.offsetHeight+12;G.boss={round,done:false};
+ shuffle(b.ops.map((v,i)=>({v,ok:i===0}))).forEach((op,k)=>{
+  const el=document.createElement('div');el.innerHTML=optHTML(op.v,'b'+k);const node=el.firstElementChild;ar.appendChild(node);
+  const f=makeFlyer(node,round,{opt:op.v,correct:op.ok,life:WAVES[G.wave].life+4000});
+  f.vx*=.75;f.vy*=.6;f.x=(ar.clientWidth-f.w)*(k+.5)/3-f.w/2+f.w/2;f.y=G.minY+20+k*25;
+ });
+ hud();msg('¡JEFE!',b.q+' Dispara a la respuesta correcta.');
+}
+function loop(){
+ cancelAnimationFrame(raf);
+ const step=now=>{if(G.paused||!$('#arena'))return;const dt=Math.min(.05,(now-G.last)/1000);G.last=now;
+  const W=WAVES[G.wave];const ar=$('#arena');const AW=ar.clientWidth,AH=ar.clientHeight-86;
+  const R=curRounds();const next=R[G.ri];
+  const flying=G.live.filter(o=>o.state==='fly').length;
+  if(next&&now>G.nextSpawn){
+   if(next.kind==='snip'&&flying<W.at&&!G.boss){spawn();G.nextSpawn=now+1600}
+   else if(next.kind==='boss'&&G.live.length===0){spawnBoss();G.nextSpawn=now+1600}
+  }
+  G.live.forEach(o=>{
+   if(o.state==='fly'){
+    const age=now-o.born;
+    if(age>o.life){o.state='escape'}
+    o.x+=o.vx*dt;o.y+=o.vy*dt;
+    if(o.x<4){o.x=4;o.vx=Math.abs(o.vx)}if(o.x>AW-o.w-4){o.x=AW-o.w-4;o.vx=-Math.abs(o.vx)}
+    if(o.y<G.minY){o.y=G.minY;o.vy=Math.abs(o.vy)}if(o.y>AH-o.h-10){o.y=AH-o.h-10;o.vy=-Math.abs(o.vy)}
+    if(Math.random()<.012){o.vy=-o.vy}if(o.y>AH*0.62&&o.vy>0&&Math.random()<.05)o.vy=-Math.abs(o.vy);
+    o.rot=Math.sin(age/300)*3;
+   }else if(o.state==='escape'){o.y-=W.speed*2.4*dt;o.rot=0;if(o.y<-o.h-20){o.state='gone';o.el.remove();if(!o.silent)escaped(o)}}
+   else if(o.state==='fall'){o.vy+=900*dt;o.y+=o.vy*dt;o.rot+=260*dt;if(o.y>AH+40){o.state='gone';o.el.remove()}}
+   if(o.el)o.el.style.transform=`translate(${o.x}px,${o.y}px) rotate(${o.rot}deg)`;
+  });
+  G.live=G.live.filter(o=>o.state!=='gone');
+  // El panel del jefe se retira 1.5 s después de resolverse, haya o no otros carteles en el aire
+  if(G.boss&&G.boss.done&&now-G.boss.doneAt>1500)closeBoss();
+  if(G.lives<=0){return gameOver()}
+  if(G.ri>=R.length&&!G.live.length&&!G.boss){G.paused=true;setTimeout(nextWave,900);return}
+  raf=requestAnimationFrame(step)};
+ raf=requestAnimationFrame(step);
+}
+function closeBoss(){const p=$('#boss');if(p)p.remove();G.boss=null;G.minY=6}
+function escaped(o){
+ if(o.opt!==undefined){ // opción de jefe que se va volando
+  if(!G.boss||G.boss.done)return;
+  if(o.correct)resolveBoss(o,'escape');
+  return;
+ }
+ resolve(o,'escape');
+}
+function nextWave(){
+ if(!G.solo&&G.wave<WAVES.length-1){G.wave++;G.ri=0;hud();waveCard()}else gameOver(true);
+}
+function msg(b,t){const m=$('#msg');if(m)m.innerHTML=`<b>${esc(b)}</b><span>${esc(t)}</span>`}
+function fx(x,y,txt,col){const ar=$('#arena');const d=document.createElement('div');d.className='fx';d.style.left=x+'px';d.style.top=y+'px';d.style.color=col;d.textContent=txt;ar.appendChild(d);setTimeout(()=>d.remove(),1300)}
+function bits(x,y){const ar=$('#arena');const cols=['#E50914','#141414','#F5A524','#ffffff'];for(let i=0;i<16;i++){const b=document.createElement('div');b.className='bit';b.style.background=cols[i%4];b.style.left=x+'px';b.style.top=y+'px';b.style.border='1px solid #141414';ar.appendChild(b);const a=Math.random()*Math.PI*2,r=40+Math.random()*80;b.animate([{transform:'translate(0,0)'},{transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r+60}px)`,opacity:0}],{duration:700+Math.random()*300,easing:'cubic-bezier(.2,.8,.2,1)'});setTimeout(()=>b.remove(),1000)}}
+function dog(txt){const d=$('#dog');if(!d)return;$('#bub').textContent=txt;d.classList.remove('show');void d.offsetWidth;d.classList.add('show')}
+function flash(){const f=$('#flash');f.animate([{opacity:.85},{opacity:0}],{duration:140})}
+function shakeArena(){const ar=$('#arena');ar.classList.remove('shake');void ar.offsetWidth;ar.classList.add('shake')}
+const mult=()=>Math.max(1,Math.min(MULT_MAX,G.combo));
+const TAUNTS=['¡Ese índice no existe ni en mis sueños!','¿Seguro? Revisa el length.','¡Ja! El compilador se está riendo.','Ese bug pasó volando…','¡Fuera de rango… como tu puntería!'];
+function resolve(o,how){
+ const r=o.round,t=r.item;const ok=how==='shot'?!!t.bug:!t.bug;
+ r.res=ok?'ok':'bad';
+ const cx=o.x+o.w/2,cy=Math.max(30,o.y+20);
+ if(ok){G.combo++;G.best=Math.max(G.best,G.combo);const pts=(how==='shot'?100:50)*mult();G.score+=pts;
+  if(how==='shot'){SFX.hit();fx(cx,cy,'¡BUG! +'+pts,'#E50914');msg('¡BIEN!',t.x)}
+  else{SFX.pass();fx(cx,40,'CORRECTO +'+pts,'#2E9E5B');msg('CORRECTO',t.x)}
+ }else{G.combo=0;G.lives--;SFX.bad();shakeArena();
+  if(how==='shot'){fx(cx,cy,'¡ERA CORRECTO!','#141414');dog('¡Ja! Ese código estaba bien.');msg('ERA CORRECTO',t.x)}
+  else{fx(cx,40,'SE ESCAPÓ UN BUG','#E50914');dog(TAUNTS[Math.floor(Math.random()*TAUNTS.length)]);msg('SE ESCAPÓ',t.x)}
+ }
+ G.log.push({r,ok,how});hud();
+}
+function resolveBoss(o,how){
+ const r=o.round,b=r.item;G.boss.done=true;G.boss.doneAt=performance.now();const pn=$('#boss');if(pn)pn.classList.add('done');
+ const ok=how==='shot'&&o.correct;r.res=ok?'ok':'bad';
+ const cx=o.x+o.w/2,cy=Math.max(30,o.y+20);
+ if(ok){G.combo++;G.best=Math.max(G.best,G.combo);const pts=300*mult();G.score+=pts;SFX.hit();setTimeout(SFX.wave,200);fx(cx,cy,'👑 JEFE DERROTADO +'+pts,'#E50914');msg('¡JEFE DERROTADO!',b.x)}
+ else{G.combo=0;G.lives--;SFX.bad();shakeArena();
+  if(how==='shot'){fx(cx,cy,'NO ERA '+o.opt,'#141414');dog(`¡No! La respuesta era ${b.ops[0]}.`)}
+  else{fx(AW2()/2,60,'EL JEFE ESCAPÓ','#E50914');dog(`Se fue… era ${b.ops[0]}.`)}
+  msg('ERA '+b.ops[0],b.x)}
+ G.live.forEach(q=>{if(q.round===r&&q!==o&&q.state==='fly'){q.state='escape';q.silent=true}});
+ G.log.push({r,ok,how,picked:o.opt});hud();
+}
+const AW2=()=>$('#arena').clientWidth;
+function bindArena(){
+ const ar=$('#arena'),cr=$('#cross');
+ const pos=e=>{const r=ar.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return[p.clientX-r.left,p.clientY-r.top]};
+ ar.addEventListener('mousemove',e=>{const[x,y]=pos(e);cr.style.left=x+'px';cr.style.top=y+'px'});
+ ar.addEventListener('mouseleave',()=>{cr.style.left='-100px'});
+ ar.addEventListener('pointerdown',e=>{
+  if(G.paused||e.target.closest('.overlay')||e.target.closest('#mute'))return;
+  const[x,y]=pos(e);
+  const flying=G.live.filter(o=>o.state==='fly');
+  const tg=e.target.closest('.target');const o=tg&&G.live.find(q=>q.el===tg&&q.state==='fly');
+  const owner=o||flying[0];
+  if(owner&&owner.round.ammo<=0){SFX.empty();fx(x,y-30,'SIN CARTUCHOS','#6b6b6b');return}
+  if(owner)owner.round.ammo--;
+  G.shots++;SFX.shot();flash();
+  if(o){G.hits++;o.state='fall';o.vy=-120;o.el.classList.add('hit');bits(x,y);
+   if(o.opt!==undefined){if(G.boss&&!G.boss.done)resolveBoss(o,'shot')}else resolve(o,'shot')}
+  else{G.combo=0;fx(x,y-30,'¡FALLASTE!','#6b6b6b');hud()}
+ });
+}
+function rank(sc,acc,jugadas){
+ sc=Math.round(sc*4/Math.max(1,jugadas)); // umbrales pensados para 4 oleadas; se escalan a las jugadas
+ if(sc>=9000&&acc>=85)return'Arquitecto de matrices';
+ if(sc>=6000)return'Cazador de bugs certificado';
+ if(sc>=3500)return'Recorredor de arreglos';
+ if(sc>=1500)return'Aprendiz del índice';
+ return'Novato del índice 0';
+}
+function gameOver(done){
+ G.paused=true;cancelAnimationFrame(raf);SFX.over();
+ const jugadas=G.wave-G.from+1;
+ const best=G.solo?LS.get('cb_best',0):Math.max(LS.get('cb_best',0),G.score);if(!G.solo)LS.set('cb_best',best);
+ const correct=G.log.filter(l=>l.ok).length,acc=G.log.length?Math.round(100*correct/G.log.length):0;
+ const rt=rank(G.score,acc,jugadas);
+ const wrong=G.log.filter(l=>!l.ok),right=G.log.filter(l=>l.ok);
+ const byT={};G.log.forEach(l=>{const a=l.r.item.t;byT[a]=byT[a]||[0,0];byT[a][1]++;if(l.ok)byT[a][0]++});
+ const weak=Object.entries(byT).filter(([a,v])=>v[1]>=2).sort((x,y)=>x[1][0]/x[1][1]-y[1][0]/y[1][1])[0];
+ window.scrollTo({top:0});
+ $('#app').innerHTML=`<section class="end"><div class="bigface"><img class="px fl" alt="" src="${cup({smile:true})}"></div>
+ <div><div class="kicker rv">${done?(G.solo?'¡Superaste la oleada '+(G.wave+1)+' · '+WAVES[G.wave].t+'!':'¡Completaste las '+WAVES.length+' oleadas!'):'Te quedaste sin vidas en la oleada '+(G.wave+1)}</div>
+ <h1 class="h1 rv" style="--d:1;font-size:clamp(46px,6.2vw,88px);margin-top:6px">${rt}</h1>
+ <div class="stats rv" style="--d:2"><div class="stat"><b style="color:var(--red)">${G.score}</b><span>PUNTOS</span></div><div class="stat"><b>${acc}%</b><span>ACIERTOS</span></div><div class="stat"><b>×${G.best}</b><span>MEJOR COMBO</span></div><div class="stat"><b>${correct}/${G.log.length}</b><span>RONDAS</span></div><div class="stat"><b>${best}</b><span>RÉCORD</span></div></div>
+ <div class="topics rv" style="--d:3">${Object.entries(byT).map(([k,v])=>`<span class="tchip" style="background:${TOPIC[k].col}">${TOPIC[k].ab} ${v[0]}/${v[1]}</span>`).join('')}</div>
+ ${weak&&weak[1][0]<weak[1][1]?`<p class="rv" style="--d:3;margin-top:14px;font-size:16px">Para repasar: <b>${TOPIC[weak[0]].n}</b> (${weak[1][0]} de ${weak[1][1]} aciertos). Revisa abajo la explicación de cada error.</p>`:''}
+ <div class="actions rv" style="--d:4"><button class="btn" id="again">${G.solo?'Repetir oleada':'Jugar otra vez'} ▸</button>${G.solo&&done&&G.wave<WAVES.length-1?'<button class="btn ghost" id="nextlvl">Oleada '+(G.wave+2)+' ▸</button>':''}<button class="btn ghost" id="home">Inicio</button></div>
+ </div></section>
+ ${wrong.length?`<h2 class="rowtitle">Repasa tus errores (${wrong.length})</h2><div class="review">${wrong.map(reviewCard).join('')}</div>`:''}
+ ${right.length?`<h2 class="rowtitle">Lo que acertaste (${right.length})</h2><div class="review">${right.map(reviewCard).join('')}</div>`:''}
+ ${foot('Caza-Bugs · Arrays en Java · Programación de Computadores')}`;
+ const from=G.from,solo=G.solo,w=G.wave;$('#again').onclick=()=>start(from,solo);$('#home').onclick=intro;if($('#nextlvl'))$('#nextlvl').onclick=()=>start(w+1,true);
+}
+function reviewCard(l){
+ const it=l.r.item,T=TOPIC[it.t];let what,detail;
+ if(l.r.kind==='boss'){what=l.ok?'👑 Jefe derrotado':(l.how==='shot'?`👑 Elegiste ${esc(l.picked)}`:'👑 Se escapó el jefe');detail=`<b>${esc(it.q)}</b> Respuesta: <b>${esc(it.ops[0])}</b>. ${esc(it.x)}`}
+ else{what=l.how==='shot'?(it.bug?'Derribaste un bug':'Disparaste a código correcto'):(it.bug?'Dejaste escapar un bug':'Dejaste pasar código correcto');detail=`${it.bug?'<b>Tenía bug.</b>':'<b>Era correcto.</b>'} ${esc(it.x)}`}
+ return `<div class="rcard ${l.ok?'ok':''}"><div class="tico" style="background:${T.col}">${T.ab}</div><div><div class="tag">${l.ok?'✓':'✗'} ${what}</div><div class="code">${hl(it.c)}</div><div class="small">${detail}</div></div></div>`;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&G&&!G.paused&&$('#arena')){G.paused=true;const pAt=performance.now();const o=document.createElement('div');o.className='overlay';o.innerHTML='<div class="card"><div class="h2">Pausa</div><p class="small muted" style="margin:6px 0 14px">Respira. Los bugs te esperan.</p><button class="btn" id="res">Continuar ▸</button></div>';$('#arena').appendChild(o);$('#res').onclick=ev=>{ev.stopPropagation();o.remove();const dd=performance.now()-pAt;G.live.forEach(q=>q.born+=dd);if(G.boss&&G.boss.doneAt)G.boss.doneAt+=dd;G.paused=false;G.last=performance.now();loop()}}});
+intro();
+</script>
+</body>
+</html>
